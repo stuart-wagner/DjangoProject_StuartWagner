@@ -1,0 +1,17 @@
+{% extends "MainApp/base.html" %}
+
+{% block content %}
+
+<p>Topics</p>
+
+<ul>
+    {% for topic in T %}
+    <li>{{topic}}</li>
+
+    {% empty %}
+    <li>No topics have been added yet.</li>
+
+    {% endfor %}
+</ul>
+
+{% endblock content %}
