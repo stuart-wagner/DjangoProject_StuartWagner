@@ -32,4 +32,17 @@ def new_topic(request):
     context = {'form':form}
     return render(request, 'MainApp/new_topic.html', context)
 
-
+def new_entry(request, topic_id):
+    t = Topic.objects.get(id=topic_id)
+    if request.method != 'POST':
+        form = EntryForm()
+    else:
+        form = EntryForm(data=request.POST)
+        if form.is_valid():
+            new_entry = form.save(commit=False)
+            new_entry.topic = t
+            new_entry.save()
+            return redirect('MainApp:topic', topic_id=topic_id)
+    
+    context = {'form':form, 'topic':t}
+    return render(request, 'MainApp/new_entry.html', context)
