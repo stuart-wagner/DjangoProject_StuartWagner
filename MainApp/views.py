@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import *
-from .models import *
+from .models import Topic, Entry
 
 # Create your views here.
 def index(request):
@@ -38,11 +38,30 @@ def new_entry(request, topic_id):
         form = EntryForm()
     else:
         form = EntryForm(data=request.POST)
-        if form.is_valid():
-            new_entry = form.save(commit=False)
-            new_entry.topic = t
-            new_entry.save()
-            return redirect('MainApp:topic', topic_id=topic_id)
+
+    if form.is_valid():
+        new_entry = form.save(commit=False)
+
+        new_entry.topic = t
+        new_entry.save()
+        return redirect('MainApp:topic', topic_id=topic_id)
     
-    context = {'form':form, 'topic':t}
+    context = {'topic':t, 'form':form}
     return render(request, 'MainApp/new_entry.html', context)
+
+def edit_entry(request, entry_id):
+    """edit an existing entry"""
+    entry = Entry.objects.get(id=entry_id)
+    t = entry.topic
+
+    if request.method != 'POST':
+        form = EntryForm(instance=entry)
+
+    else:
+        form = EntryForm(instance=entry, data=request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('MainApp:topic', topic_id=t.id)
+    
+    context = {'entry':entry, 'topic':t, 'form':form}
+    return render(request, 'MainApp/edit_entry.html', context)
