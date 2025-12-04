@@ -1,0 +1,16 @@
+{% extends "MainApp/base.html" %}
+
+{% block content %}
+
+<h2>Log out</h2>
+
+<p>Are you sure you want to log out?</p>
+
+<form action="{% url 'users:logout' %}" method="POST">
+    {% csrf_token %}
+
+    <button name="submit">Log out</button>
+    <input type="hidden" name="next" value="{% url 'MainApp:index' %}" />
+</form>
+
+{% endblock content %}
