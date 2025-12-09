@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import *
 from .models import *
+from django.http import Http404
 
 # Create your views here.
 def index(request):
@@ -10,12 +11,16 @@ def index(request):
 @login_required
 def topics(request):
     topics = Topic.objects.filter(owner=request.user).order_by('date_added')
-    context = {'T': topics}     #key represents the variable name in the template, the value is the variable name in the view
+    context = {'topics': topics}     #key represents the variable name in the template, the value is the variable name in the view
     return render(request, 'MainApp/topics.html', context)
 
 @login_required
 def topic(request, topic_id):
     t = Topic.objects.get(id=topic_id)
+
+    if t.owner != request.user:
+        raise Http404
+
     entries = Entry.objects.filter(topic=t).order_by('-date_added') #the minus (-) sign means descending order
     context = {'topic':t, 'entries':entries}
 
@@ -29,7 +34,9 @@ def new_topic(request):
         form = TopicForm(data=request.POST)
 
         if form.is_valid():
-            form.save()
+            new_topic = form.save(commit=False)
+            new_topic.owner = request.user
+            new_topic.save()
 
             return redirect('MainApp:topics')
         
@@ -39,6 +46,10 @@ def new_topic(request):
 @login_required
 def new_entry(request, topic_id):
     t = Topic.objects.get(id=topic_id)
+
+    if t.owner != request.user:
+        raise Http404
+    
     if request.method != 'POST':
         form = EntryForm()
     else:
@@ -60,9 +71,11 @@ def edit_entry(request, entry_id):
     entry = Entry.objects.get(id=entry_id)
     topic = entry.topic
 
+    if topic.owner != request.user:
+        raise Http404
+
     if request.method != 'POST':
         form = EntryForm(instance=entry)
-
     else:
         form = EntryForm(instance=entry, data=request.POST)
         if form.is_valid():
